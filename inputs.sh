@@ -9,9 +9,7 @@ read -p "Enter your name: " name
 echo "Hello $name! Nice to meet you :)"
 echo ""
 
-
- echo "What would you like to do?"
-
+display-menu() {
     echo ""
     echo "1. Toggle WiFi"
     echo "2. Toggle Bluetooth"
@@ -21,6 +19,10 @@ echo ""
     echo "6. Power Off"
     echo "7. Display options again."
     echo ""
+}
+ echo "What would you like to do?"
+
+    display-menu
 
 
 wifi="false"
@@ -73,7 +75,7 @@ while true; do
         
         3)
                 if [[ "$flashlight" == "false" ]]; then
-                
+
                     echo "  [+] Flashlight turned on"
                     echo "  [.] Enter 7 to display options again."
                     
@@ -136,15 +138,7 @@ while true; do
             ;;
 
         7)
-            echo ""
-            echo "1. Toggle WiFi"
-            echo "2. Toggle Bluetooth"
-            echo "3. Toggle Flashlight"
-            echo "4. Switch dark mode/light mode"
-            echo "5. Toggle night light"
-            echo "6. Power Off"
-            echo "7. Display options again."
-            echo ""
+            display-menu
              
             ;;
         
