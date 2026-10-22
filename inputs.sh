@@ -18,6 +18,7 @@ display-menu() {
     echo "5. Toggle night light"
     echo "6. Power Off"
     echo "7. Display options again."
+    echo "8. Display current status."
     echo ""
 }
  echo "What would you like to do?"
@@ -25,12 +26,18 @@ display-menu() {
     display-menu
 
 
-wifi="false"
-bluetooth="false"
-mode="light"
-flashlight="false"
-nightLight="false"
-poweroff="false"
+
+theme="Light"
+flashlight="OFF"
+nightLight="OFF"
+poweroff="OFF"
+
+
+wifiStatus="$(nmcli radio wifi)"
+bluetoothStatus="$(bluetoothctl show | grep "Powered:" | awk '{print $2}')"
+
+#enableNightLight = $(gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled true)
+#disableNightLight = $(gsettings set org.gnome.settings-daemon.plugins.color night-light-enabled false)
 
 
 while true; do
@@ -40,47 +47,65 @@ while true; do
     case $option in
     
         1)
-                if [[ "$wifi" == "false" ]]; then
-                    echo "  [+] Wifi turned on [.oO] "
+                if [ $wifiStatus == "disabled" ]; then
+                    
+                    echo "  [+] Turning WiFi on..."
+                    if nmcli radio wifi on; then
+                        sleep 3
+                        echo "  [+] WiFi turned on [.o0]"
+                        wifiStatus="$(nmcli radio wifi)"
+                    
+                    fi
+                    
+                    echo "  [.] Enter 7 to display options again."
+                    
+                elif [ $wifiStatus == "enabled" ]; then
+                    
+                    echo "  [+] Turning WiFi off..."
+                    if nmcli radio wifi off; then
+                        sleep 3
+                        echo "  [+] WiFi turned off"
+                        wifiStatus="$(nmcli radio wifi)"
+                    fi
+                    
+                    echo "  [.] Enter 7 to display options again."
 
-                    
-                    echo "  [.] Enter 7 to display options again."
-                    
-                    wifi="true"
-                    
                 else
-                    echo "  [-] Wifi turned off"
-                    echo "  [.] Enter 7 to display options again."
-            
-                    wifi="false"
-                    
+                    :
                 fi
             ;;
         
         2)
-                if [[ "$bluetooth" == "false" ]]; then
-                    echo "  [+] Bluetooth turned on"
-
+                if bluetoothctl show | grep -q "Powered: no"; then
+                    echo "  [+] Turning on bluetooth..."
+                    if bluetoothctl power on; then
+                        echo "  [+] Bluetooth turned on"
+                        bluetoothStatus="$(bluetoothctl show | grep "Powered:" | awk '{print $2}')"
+                    fi
                     
                     echo "  [.] Enter 7 to display options again."
     
-                    bluetooth="true"
-                else
-                    echo "  [-] Bluetooth turned off"
+                elif bluetoothctl show | grep -q "Powered: yes"; then
+                    
+                    echo "  [-] Turning off bluetooth..."
+                    if bluetoothctl power off; then
+                        echo "  [-] Bluetooth turned off"
+                        bluetoothStatus="$(bluetoothctl show | grep "Powered:" | awk '{print $2}')"
+                    fi
+
                     echo "  Enter 7 to display options again."
 
-                    bluetooth="false"
                 fi
             ;;
         
         3)
-                if [[ "$flashlight" == "false" ]]; then
+                if [[ "$flashlight" == "OFF" ]]; then
 
                     echo "  [+] Flashlight turned on"
                     echo "  [.] Enter 7 to display options again."
                     
 
-                    flashlight="true"
+                    flashlight="ON"
                 else
                     echo "  [-] Flashlight turned off"
 
@@ -88,51 +113,56 @@ while true; do
                     echo "  [.] Enter 7 to display options again."
                     
 
-                    flashlight="false"
+                    flashlight="OFF"
                 fi
             ;;
         
         4)
-                if [[ "$mode" == "light" ]]; then
+                if [ "$(gsettings get org.gnome.desktop.interface color-scheme)" == "'prefer-light'" ]; then
+
+                    gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
                     echo "  [+] Switched to dark mode"
 
                     
                     echo "  [.] Enter 7 to display options again."
+
+                    theme="Dark"
                     
-
-                    mode="dark"
-                else
-                    echo "  [-] Switched to light mode"
-
+                elif [ "$(gsettings get org.gnome.desktop.interface color-scheme)" == "'prefer-dark'" ]; then
+                    
+                    gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+                    echo "  [+] Switched to light mode"
                     
                     echo "  [.] Enter 7 to display options again."
                     
-                    mode="light"
+                    theme="Light"
+                else
+                    :
                 fi
             ;;
         
         5)
-                if [[ "$nightLight" == "false" ]]; then
+                if [[ "$nightLight" == "OFF" ]]; then
                     echo "  [+] Night Light turned on"
 
                     
                     echo "  [.] Enter 7 to display options again."
                     
 
-                    nightLight="true"
+                    nightLight="ON"
                 else
                     echo "  [-] Night Light turned off"
                     
                     echo "  [.] Enter 7 to display options again."
                     
-                    nightLight="false"
+                    nightLight="OFF"
                 fi
             ;;
         
         6)
-                if [[ "$poweroff" == "false" ]]; then
+                if [[ "$poweroff" == "OFF" ]]; then
                     echo "  [-] Powering off... Goodbye :("
-                    poweroff="true"
+                    poweroff="ON"
                     break
                 fi
             ;;
@@ -140,6 +170,19 @@ while true; do
         7)
             display-menu
              
+            ;;
+
+        8)
+            echo ""
+            echo "========== SYSTEM STATUS =========="
+            echo "WiFI:         $wifiStatus"
+            echo "Bluetooth:    $bluetoothStatus"
+            echo "Flashlight:   $flashlight"
+            echo "Theme:        $theme"
+            echo "Night light:  $nightLight"
+            echo "==================================="
+            echo ""
+
             ;;
         
         *)
